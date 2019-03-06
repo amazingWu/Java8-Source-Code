@@ -228,6 +228,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     private void ensureExplicitCapacity(int minCapacity) {
+        // 该值记录数组的list的修改次数，用于在迭代器中提供快速失败策略
         modCount++;
 
         // overflow-conscious code
@@ -252,6 +253,7 @@ public class ArrayList<E> extends AbstractList<E>
     private void grow(int minCapacity) {
         // overflow-conscious code
         int oldCapacity = elementData.length;
+        // 默认扩增一半容量
         int newCapacity = oldCapacity + (oldCapacity >> 1);
         if (newCapacity - minCapacity < 0)
             newCapacity = minCapacity;
@@ -301,6 +303,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
+     * ArrayList仍然要通过遍历的方式进行查找
      * Returns the index of the first occurrence of the specified element
      * in this list, or -1 if this list does not contain the element.
      * More formally, returns the lowest index <tt>i</tt> such that
@@ -347,6 +350,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @return a clone of this <tt>ArrayList</tt> instance
      */
     public Object clone() {
+        // clone时只对其中的数组和modCount进行了重置
         try {
             ArrayList<?> v = (ArrayList<?>) super.clone();
             v.elementData = Arrays.copyOf(elementData, size);
@@ -373,6 +377,7 @@ public class ArrayList<E> extends AbstractList<E>
      *         proper sequence
      */
     public Object[] toArray() {
+        // 虽然转成了数组，但是数据的类型信息实际上还是保留的，可以通过强转来使用，但是使用时需要小心些
         return Arrays.copyOf(elementData, size);
     }
 
@@ -402,6 +407,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
+        // 所以像toArray(new String[0])这种内部是重新创建了一个的同类型的数组的
         if (a.length < size)
             // Make a new array of a's runtime type, but my contents:
             return (T[]) Arrays.copyOf(elementData, size, a.getClass());
@@ -432,6 +438,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
+     * ArrayList在遍历时只要不涉及size的变化，仍然可以进行数据替换
      * Replaces the element at the specified position in this list with
      * the specified element.
      *
@@ -473,6 +480,7 @@ public class ArrayList<E> extends AbstractList<E>
         rangeCheckForAdd(index);
 
         ensureCapacityInternal(size + 1);  // Increments modCount!!
+        // 数组整体后移
         System.arraycopy(elementData, index, elementData, index + 1,
                          size - index);
         elementData[index] = element;
@@ -490,20 +498,22 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public E remove(int index) {
         rangeCheck(index);
-
+        // 记录修改次数
         modCount++;
         E oldValue = elementData(index);
-
+        // 数组删除位置后的数据整体迁移
         int numMoved = size - index - 1;
         if (numMoved > 0)
             System.arraycopy(elementData, index+1, elementData, index,
                              numMoved);
+        // 此时原最后一个数据已经拷贝到前一位了，因此原最后一位是重复的，需要手动释放掉原最后一个数据位置的存储空间
         elementData[--size] = null; // clear to let GC do its work
 
         return oldValue;
     }
 
     /**
+     * 遍历式删除
      * Removes the first occurrence of the specified element from this list,
      * if it is present.  If the list does not contain the element, it is
      * unchanged.  More formally, removes the element with the lowest index
@@ -553,6 +563,8 @@ public class ArrayList<E> extends AbstractList<E>
     public void clear() {
         modCount++;
 
+        // 遍历清空所有的数组
+        // 虽然清空了数据，但是实际上分配的数组并没有重置，还是clear前的
         // clear to let GC do its work
         for (int i = 0; i < size; i++)
             elementData[i] = null;
@@ -716,10 +728,12 @@ public class ArrayList<E> extends AbstractList<E>
         int r = 0, w = 0;
         boolean modified = false;
         try {
+            // 将不删除的元素前移
             for (; r < size; r++)
                 if (c.contains(elementData[r]) == complement)
                     elementData[w++] = elementData[r];
         } finally {
+            // 最后释放掉数组最后的空间，释放的长度为查找到要删除的元素个数
             // Preserve behavioral compatibility with AbstractCollection,
             // even if c.contains() throws.
             if (r != size) {
@@ -1007,6 +1021,9 @@ public class ArrayList<E> extends AbstractList<E>
                                                ") > toIndex(" + toIndex + ")");
     }
 
+    /**
+     * Sublist中只是保留了Parent的引用，因此如果parent中进行更改，Sublist也会随之更改，反之亦然
+     */
     private class SubList extends AbstractList<E> implements RandomAccess {
         private final AbstractList<E> parent;
         private final int parentOffset;
@@ -1019,6 +1036,7 @@ public class ArrayList<E> extends AbstractList<E>
             this.parentOffset = fromIndex;
             this.offset = offset + fromIndex;
             this.size = toIndex - fromIndex;
+            // ArrayList的上下文，因此modeCount是parent的modCount
             this.modCount = ArrayList.this.modCount;
         }
 

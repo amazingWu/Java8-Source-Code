@@ -573,6 +573,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     }
 
     /**
+     * 用来为迭代器提供快速失败，防止迭代中修改List产生未知的异常信息
      * The number of times this list has been <i>structurally modified</i>.
      * Structural modifications are those that change the size of the
      * list, or otherwise perturb it in such a fashion that iterations in
