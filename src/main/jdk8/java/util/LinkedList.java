@@ -565,7 +565,7 @@ public class LinkedList<E>
      */
     Node<E> node(int index) {
         // assert isElementIndex(index);
-
+        // 为了加速检索，判断是从左检索还是从右检索
         if (index < (size >> 1)) {
             Node<E> x = first;
             for (int i = 0; i < index; i++)
@@ -967,6 +967,7 @@ public class LinkedList<E>
         }
     }
 
+    // 内部是一个双向链表
     private static class Node<E> {
         E item;
         Node<E> next;
