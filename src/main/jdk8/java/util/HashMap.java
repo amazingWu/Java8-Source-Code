@@ -335,6 +335,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     static final int hash(Object key) {
         int h;
+        // 高16位与低16位异或操作*
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
 
@@ -375,7 +376,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * Returns a power of two size for the given target capacity.
      */
     static final int tableSizeFor(int cap) {
+        // cap-1避免cap已经是2的倍数
         int n = cap - 1;
+        // 通过以下操作获取比n大的最小的2的倍数
         n |= n >>> 1;
         n |= n >>> 2;
         n |= n >>> 4;
@@ -508,6 +511,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             }
             else if (s > threshold)
                 resize();
+            // 迭代式放进去
             for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
                 K key = e.getKey();
                 V value = e.getValue();
@@ -639,6 +643,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 for (int binCount = 0; ; ++binCount) {
                     if ((e = p.next) == null) {
                         p.next = newNode(hash, key, value, null);
+                        // 当链表长度>=8时,转化为红黑树
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
                             treeifyBin(tab, hash);
                         break;
@@ -833,6 +838,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     } while ((e = e.next) != null);
                 }
             }
+            // 删除后，红黑树并不会重新退化成链表。只有在下一次resize()时，才会清除不必要的红黑树
             if (node != null && (!matchValue || (v = node.value) == value ||
                                  (value != null && value.equals(v)))) {
                 if (node instanceof TreeNode)
@@ -859,6 +865,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         modCount++;
         if ((tab = table) != null && size > 0) {
             size = 0;
+            // 只清除了对链表或红黑树header的引用
             for (int i = 0; i < tab.length; ++i)
                 tab[i] = null;
         }
